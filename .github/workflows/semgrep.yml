@@ -1,31 +1,33 @@
-name: Semgrep OSS Scan
+name: Semgrep Security Scan
 
 on:
-  # Scan on every push to the main branch
   push:
-    branches: ["master", "main"]
-  # Scan when a pull request is opened or updated
+    branches: ["main", "master"]
   pull_request:
-    branches: ["master", "main"]
-  # Allow manual triggering from the Actions tab
-  workflow_dispatch:
 
 jobs:
-  semgrep:
-    name: Security Scan
+  sast_scan_semgrep:
     runs-on: ubuntu-latest
-    
-    # Skip the job if it's a dependabot PR to save on credits/time
-    if: (github.actor != 'dependabot[bot]')
+    # This allows the pipeline to continue even if vulnerabilities are found, 
+    # matching the "allow_failure: true" and "|| true" from your snippet.
+    continue-on-error: true 
 
     steps:
-      # Step 1: Check out the Juice Shop code
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      # Step 2: Run Semgrep
-      - name: Run Semgrep OSS
+      - name: Run Semgrep and Generate JSON
+        # We use the semgrep container to run the scan
         run: |
-          docker run --rm -v $(pwd):/src returntocorp/semgrep semgrep \
-          --config auto \
-          --error
+          docker run --rm -v $(pwd):/src returntocorp/semgrep semgrep ci --json --output=semgrep.json --config auto || true
+
+      - name: Beautify JSON output
+        # GitHub's ubuntu-latest runner has 'jq' pre-installed
+        run: |
+          cat semgrep.json | jq . > semgrep_beautified.json
+
+      - name: Upload Beautified Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: semgrep-report
+          path: semgrep_beautified.json
