@@ -31,3 +31,44 @@ jobs:
         with:
           name: semgrep-report
           path: semgrep_beautified.json
+
+  upload_reports:
+    runs-on: ubuntu-latest
+    needs: sast_scan_semgrep  # Ensures this runs AFTER the scan
+    if: always()             # Runs even if the scan found bugs
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Dependencies
+        run: |
+          pip install requests
+
+      - name: Upload to DefectDojo
+        env:
+          DOJO_HOST: "demo.defectdojo.org"
+          DOJO_USER: ${{ secrets.DOJO_USERNAME }}
+          DOJO_PASS: ${{ secrets.DOJO_PASSWORD }}
+        run: |
+          # 1. Fetch the API Token dynamically
+          API_KEY=$(curl -s -X POST -H 'Content-Type: application/json' \
+            "https://$DOJO_HOST/api/v2/api-token-auth/" \
+            -d "{\"username\": \"$DOJO_USER\", \"password\": \"$DOJO_PASS\"}" | jq -r '.token')
+
+          # 2. Run the instructor's Python script
+          # Note: Ensure 'upload-results.py' is in your repo root
+          python3 upload-results.py \
+            --host "$DOJO_HOST" \
+            --api_key "$API_KEY" \
+            --engagement_id 24 \
+            --product_id 5 \
+            --lead_id 1 \
+            --environment "Production" \
+            --result_file semgrep.json \
+            --scanner "Semgrep JSON Report"
