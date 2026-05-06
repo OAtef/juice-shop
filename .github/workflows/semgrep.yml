@@ -1,0 +1,31 @@
+name: Semgrep OSS Scan
+
+on:
+  # Scan on every push to the main branch
+  push:
+    branches: ["master", "main"]
+  # Scan when a pull request is opened or updated
+  pull_request:
+    branches: ["master", "main"]
+  # Allow manual triggering from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  semgrep:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    
+    # Skip the job if it's a dependabot PR to save on credits/time
+    if: (github.actor != 'dependabot[bot]')
+
+    steps:
+      # Step 1: Check out the Juice Shop code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Step 2: Run Semgrep
+      - name: Run Semgrep OSS
+        run: |
+          docker run --rm -v $(pwd):/src returntocorp/semgrep semgrep \
+          --config auto \
+          --error
