@@ -146,3 +146,157 @@ jobs:
         with:
           name: trivy-json
           path: trivy-sca.json
+
+  image_scan_scout:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Juice Shop image (local)
+        uses: docker/build-push-action@v5
+      
+        with:
+          context: .
+          file: ./Dockerfile
+          tags: juice-shop:ci
+          push: false
+          load: true
+
+      - name: Scan image with Docker Scout (JSON)
+        uses: docker/scout-action@v1
+          
+        with:
+          command: cves
+          image: juice-shop
+
+
+
+
+
+
+# name: Semgrep Security Scan
+
+# on:
+#   push:
+#     branches: ["main", "master"]
+#     pull_request:
+      
+#   jobs:
+#     sast_scan_semgrep:
+#       runs-on: ubuntu-latest
+#       continue-on-error: true
+#     steps:
+#       - name: Checkout code
+#       uses: actions/checkout@v4
+      
+#       - name: Run Semgrep and Generate JSON
+#       run: |
+#       docker run --rm -v $(pwd):/src returntocorp/semgrep semgrep ci --json --output=semgrep.json --config auto || true
+
+#  - name: Beautify JSON output
+#  run: |
+#  cat semgrep.json | jq . > semgrep_beautified.json
+
+#  - name: Upload Beautified Report
+#  uses: actions/upload-artifact@v4
+#  with:
+#  name: semgrep-report
+#  path: semgrep_beautified.json
+
+#  - name: Save Scan Results
+#  uses: actions/upload-artifact@v4
+#  with:
+#  name: semgrep-json
+#  path: semgrep.json
+
+#  upload_reports:
+#  runs-on: ubuntu-latest
+#  needs: sast_scan_semgrep
+#  if: always()
+#  steps:
+#  - name: Checkout code
+#  uses: actions/checkout@v4
+
+#  - name: Retrieve Scan Results
+#  uses: actions/download-artifact@v4
+#  with:
+#  name: semgrep-json
+
+#  - name: Setup Python
+#  uses: actions/setup-python@v5
+#  with:
+#  python-version: '3.12'
+
+#  - name: Install Dependencies
+#  run: |
+#  pip install requests
+
+#  - name: Upload to DefectDojo
+#  env:
+#  DOJO_HOST: "demo.defectdojo.org"
+#  DOJO_USER: ${{ secrets.DOJO_USERNAME }}
+#  DOJO_PASS: ${{ secrets.DOJO_PASSWORD }}
+#  run: |
+#  API_KEY=$(curl -s -X POST -H 'Content-Type: application/json' \
+#  "https://$DOJO_HOST/api/v2/api-token-auth/" \
+#  -d "{\"username\": \"$DOJO_USER\", \"password\": \"$DOJO_PASS\"}" | jq -r '.token')
+#  python3 upload-results.py \
+#  --host "$DOJO_HOST" \
+#  --api_key "$API_KEY" \
+#  --engagement_id 24 \
+#  --product_id 5 \
+#  --lead_id 1 \
+#  --environment "Production" \
+#  --result_file semgrep.json \
+#  --scanner "Semgrep JSON Report"
+
+#  sca_scan_trivy:
+#  runs-on: ubuntu-latest
+#  continue-on-error: true
+#  steps:
+#  - name: Checkout code
+#  uses: actions/checkout@v4
+
+#  - name: Run Trivy FS Scan
+#  uses: aquasecurity/trivy-action@master
+#  with:
+#  scan-type: 'fs'
+#  format: 'json'
+#  output: 'trivy-sca.json'
+
+#  - name: Save Trivy Results
+#  uses: actions/upload-artifact@v4
+#  with:
+#  name: trivy-json
+#  path: trivy-sca.json
+
+#  image_scan_scout:
+#  runs-on: ubuntu-latest
+#  continue-on-error: true
+#  steps:
+#  - name: Checkout code
+#  uses: actions/checkout@v4
+
+#  - name: Set up Docker Buildx
+#  uses: docker/setup-buildx-action@v3
+
+#  - name: Build Juice Shop image (local)
+#  uses: docker/build-push-action@v5
+#  with:
+#  context: .
+#  file: ./Dockerfile
+#  tags: juice-shop:ci
+#  push: false
+#  load: true
+
+#  - name: Scan image with Docker Scout (JSON)
+#  uses: docker/scout-action@v1
+#  with:
+#  command: cves
+#  image: juice-shop
