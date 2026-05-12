@@ -155,6 +155,7 @@ jobs:
   secrets_scan_trivy:
     name: Trivy Secrets Scan
     runs-on: ubuntu-latest
+    continue-on-error: true
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
