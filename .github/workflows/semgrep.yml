@@ -78,7 +78,9 @@ jobs:
 
       - name: Set image name and tag
         id: meta
-        run: echo "IMAGE_TAG=ghcr.io/${{ github.repository_owner }}/juice-shop:${{ github.sha }}" >> $GITHUB_ENV
+        run: |
+          OWNER_LOWERCASE=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          echo "IMAGE_TAG=ghcr.io/${OWNER_LOWERCASE}/juice-shop:${{ github.sha }}" >> $GITHUB_ENV
 
       - name: Build and push Juice Shop image
         id: build-and-push
@@ -149,4 +151,3 @@ jobs:
           # 2. Run the Python script to upload results
           # Note: Ensure 'upload-results.py' is in your repo root
           python3 upload-results.py \
-          
