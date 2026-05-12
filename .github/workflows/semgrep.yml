@@ -184,3 +184,28 @@ jobs:
             # skip-files:
             #   - "path/to/your/example-secrets.md"
           EOF
+
+
+  dast_baseline_scan:
+    name: DAST Baseline Scan
+    runs-on: ubuntu-latest
+    # This is the GitHub Actions equivalent of allow_failure: true
+    continue-on-error: true
+    # This job can run after the secrets scan passes
+    needs: secrets_scan_trivy
+    steps:
+      - name: Run ZAP Baseline Scan
+        uses: zaproxy/action-baseline@v0.11.0
+        with:
+          # The target URL to be scanned
+          target: 'https://preview.owasp-juice.shop'
+          # The name of the report file to be generated
+          report_name: 'zap-baseline-report.html'
+          # We use a Docker-based scan
+          docker_name: 'owasp/zap2docker-stable'
+
+      - name: Upload ZAP Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: zap-baseline-report
+          path: zap-baseline-report.html
