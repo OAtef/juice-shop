@@ -151,3 +151,36 @@ jobs:
           # 2. Run the Python script to upload results
           # Note: Ensure 'upload-results.py' is in your repo root
           python3 upload-results.py \
+
+  secrets_scan_trivy:
+    name: Trivy Secrets Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy for secrets
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'table'
+          # Exit with non-zero code if secrets are found
+          exit-code: '1'
+          # Tell Trivy to only look for secrets
+          scanners: 'secret'
+          # Ignore files that commonly contain false positives
+          ignore-unfixed: true
+          trivy-config: trivy-secrets.yaml
+
+      # Create a dummy config file to ignore specific files if needed
+      - name: Create Trivy secrets config
+        if: always() # Run this even if the scan fails, to show the config
+        run: |
+          cat <<EOF > trivy-secrets.yaml
+          secret:
+            # You can add file paths to ignore here if you have false positives
+            # For example:
+            # skip-files:
+            #   - "path/to/your/example-secrets.md"
+          EOF
