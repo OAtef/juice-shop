@@ -89,7 +89,7 @@ jobs:
           -F "verified=true" \
           -F "scan_type=Trivy Scan" \
           -F "minimum_severity=High" \
-          -F "engagement=22" \
+          -F "engagement=13" \
           -F "file=@trivy-results.json"
 
       - name: Import Semgrep SAST Results to DefectDojo
@@ -100,5 +100,5 @@ jobs:
           -F "verified=true" \
           -F "scan_type=Semgrep JSON Report" \
           -F "minimum_severity=Info" \
-          -F "engagement=22" \
+          -F "engagement=13" \
           -F "file=@semgrep-results.json"
